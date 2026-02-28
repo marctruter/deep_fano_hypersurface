@@ -1,1 +1,1 @@
-# Deep-Reinforcement-Learning-of-Fano-Hypersurfaces-
+# Deep Reinforcement Learning for Fano Hypersurfaces
