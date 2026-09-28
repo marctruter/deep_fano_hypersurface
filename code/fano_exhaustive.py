@@ -345,5 +345,5 @@ if __name__ == '__main__':
                 if result is not None:
                     data_terminal_points.append(result)
             print(d, time.time() - time_start, len(data_terminal_points))
-    os.makedirs("data", exist_ok=True)
-    np.savetxt("data/exhaustive_terminal_points.csv", data_terminal_points, delimiter=",")
+    os.makedirs("../data", exist_ok=True)
+    np.savetxt("../data/exhaustive_terminal_points.csv", data_terminal_points, delimiter=",")
