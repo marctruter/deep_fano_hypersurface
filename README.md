@@ -8,17 +8,17 @@ This is the repository for the source code and data associated to the paper:
 ## Code
 
 **Exhaustive Search** 
-- `fano_exhaustive.py` search code
-- `fano_exhaustive_analysis.ipynb` analysis code
+- `code/fano_exhaustive.py` search code
+- `code/fano_exhaustive_analysis.ipynb` analysis code
   
 **Fixed Heuristic Search**
-- `fano_main.py` search and analysis code
+- `code/fano_main.py` search and analysis code
   
 **Dynamic Heuristic (Deep Reinforcement Learning) Search**
-- `fano_main.py` search and analysis code
+- `code/fano_main.py` search and analysis code
 
 **Appendix**
-- `fano_appendix_analysis.ipynb` analysis code
+- `code/fano_appendix_analysis.ipynb` analysis code
 
 ## Data
 
