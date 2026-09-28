@@ -16,7 +16,7 @@
 dim_X = 4 #dimension of hypersurface
 alpha_X = 1 #adjunction number of hypersurface
 
-import math as m
+import math
 import numpy as np
 import itertools as it
 
@@ -38,11 +38,11 @@ def terminal_point(point):
 def wellformedness(degree, point): #Fletcher criterion
     #(1)
     for i,j in it.combinations(range(len(point)),2):
-        if degree % m.gcd(*(point[k] for k in range(len(point)) if k != i if k != j)) != 0:
+        if degree % math.gcd(*(point[k] for k in range(len(point)) if k != i if k != j)) != 0:
             return False
     #(2)
     for i in range(len(point)):
-        if m.gcd(*(point[k] for k in range(len(point)) if k != i)) != 1:
+        if math.gcd(*(point[k] for k in range(len(point)) if k != i)) != 1:
             return False
     return True
 
@@ -330,6 +330,7 @@ if __name__ == '__main__':
     import time
     import numpy as np
     import os
+    from pathlib import Path
 
     data_terminal_points = []
     time_start = time.time()
@@ -345,5 +346,8 @@ if __name__ == '__main__':
                 if result is not None:
                     data_terminal_points.append(result)
             print(d, time.time() - time_start, len(data_terminal_points))
-    os.makedirs("../data", exist_ok=True)
-    np.savetxt("../data/exhaustive_terminal_points.csv", data_terminal_points, delimiter=",")
+
+    PROJECT_DIR = Path(__file__).resolve().parent.parent
+    DATA_DIR = PROJECT_DIR / "data"
+    os.makedirs(DATA_DIR, exist_ok=True)
+    np.savetxt(DATA_DIR / "exhaustive_terminal_points2.csv", data_terminal_points, delimiter=",")
