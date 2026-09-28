@@ -57,7 +57,7 @@ def terminal_sufficient_condition(point):
                     return False
     return True
     
-#terminal_singularities(degree, point): returns list of terminal singularities if all singularities are terminal, False otherwise
+#terminal_singularities(degree, point): returns list of singularities if all singularities are terminal, False otherwise
 def terminal_singularities(degree, point):
     sings = []
     point_strata = strata(point)
@@ -76,16 +76,16 @@ def terminal_singularities(degree, point):
                 t = tangent_index(degree, point, stratum_weights, stratum_indices)
                 stratum_indices_without_t = tuple(i for i in stratum_indices if i != t)
                 sing_weights = tuple(point[i] % h_I for i in range(len(point)) if i != stratum_indices_without_t[0] if i != t)
-                sing = (h_I, sing_weights, stratum_weights, point[t], dim_qs, sing_type, qsness)
+                sing = (h_I, sing_weights, point[t], stratum_weights, dim_qs, sing_type, qsness)
                 if terminal(degree, point, sing, k):
-                        sings.append(sing)
+                    sings.append(sing)
                 else:
                     return False
         else: #mu_I == 0
             dim_qs = k
             rho_I = rho(degree, point, stratum_weights)
             stratum_indices_complement = tuple(i for i in range(len(point)) if i not in stratum_indices)
-            nonqs_existence  = rank_test(degree, point, stratum_weights, stratum_indices_complement)
+            nonqs_existence  = rank_test(degree, point, stratum_weights, stratum_indices)
             if rho_I > k or nonqs_existence == False:
                 qsness = "qs"
                 if h_I == 1:
@@ -96,7 +96,7 @@ def terminal_singularities(degree, point):
                     sing_weights = tuple(point[i] % h_I for i in range(len(point)) if i != stratum_indices[0] if i != t)
                     sing = (h_I, sing_weights, point[t], stratum_weights, dim_qs, sing_type, qsness)
                     if terminal(degree, point, sing, k):
-                            sings.append(sing)
+                        sings.append(sing)
                     else:
                         return False
             else: #rho_I<=k and nonqs_existence == True
@@ -161,7 +161,7 @@ def strata(point):
     for stratum_len in range(1, len(point) + 1):
         for stratum_indices in it.combinations(range(len(point)), stratum_len):
             stratum_weights = tuple(point[i] for i in stratum_indices)
-            h_I = m.gcd(*stratum_weights)
+            h_I = math.gcd(*stratum_weights)
             k = len(stratum_weights) - 1
             stratum = (h_I, stratum_weights, stratum_indices, k)
             strata.append(stratum)
@@ -220,46 +220,46 @@ def monomial_finder(degree, stratum_weights, monomial_blacklist):
     return monomial_builder_recursive(0, (0,) * n)
 
 #rank_test(degree, point, stratum_weights, search_indices): returns True if the rank condition is satisfied, False otherwise
-def rank_test(degree, point, stratum_weights, search_indices): 
+def rank_test(degree, point, stratum_weights, stratum_indices): 
+    stratum_indices_complement = tuple(i for i in range(len(point)) if i not in stratum_indices)
     J = []
-    unsearched_indices = search_indices
-    for i in search_indices:
-        t = tangent_index(degree, point, stratum_weights, unsearched_indices)
-        if t != None:
-            unsearched_indices = tuple(i for i in unsearched_indices if i != t)
-            J.append(t)
-    #len(J)=0 case automatically wins
+    for i in stratum_indices_complement:
+        if monomial_exists(degree - point[i], stratum_weights):
+            J.append(i)
     if len(J) == 0:
         return True 
-    #l==1 case can be simplified
-    for j in J:
-        if mu(degree - point[j], stratum_weights) == 1:
-            return False
-    #l>=2 case
-    monomials_J = [[] for _ in range(len(point))]
-    def grab_new_monomial(I):
-        for i in I:
-            monomial = monomial_finder(degree - point[i], stratum_weights, monomials_J[i]) 
-            if monomial != None: 
-                monomials_J[i].append(monomial)
-                return True
+    #If any mu(g_j)=1, then fail
+    elif any(mu(degree - point[j], stratum_weights) == 1 for j in J):
         return False
-    grab_available = True
-    for l in range (2, len(J) + 1): #can maybe optimise here than finding all monomials!
-        for I in it.combinations(J, l):
-            criterion_not_met = True
-            #print(point, stratum_weights, J, I, monomials_J)
-            while criterion_not_met:
-                if grab_available == True:
-                    grab_available = grab_new_monomial(J)
-                matrix_entries = [monomials_J[j][i] for j in I for i in range(len(monomials_J[j]))]
-                matrix_entries_shifted_to_origin = [list(np.array(m) - np.array(matrix_entries[0])) for m in matrix_entries]
-                matrix = np.array(matrix_entries_shifted_to_origin)
-                rank = np.linalg.matrix_rank(matrix)
-                if rank >= l:
-                    break
-                if grab_available == False: #means all monomials in play and didnt satisfy criterion, so fail
-                    return False
+    #Else, mu(g_j)>=2 for all j in J
+    else:
+        monomials_Y = [[] for _ in range(len(point))] # monomials_Y[i] will hold the list of monomials for g_i
+        def grab_new_monomial(J):
+            for j in J:
+                monomial = monomial_finder(degree - point[j], stratum_weights, monomials_Y[j])
+                if monomial is not None:
+                    monomials_Y[j].append(monomial)
+                    return True
+            return False  
+        def rank_of_MJ(J):
+            MJ = []
+            for j in J:
+                monomials_gj = monomials_Y[j]
+                if len(monomials_gj) < 2:
+                    continue  # need at least m0_j and one other monomial to get a difference
+                m0 = np.array(monomials_gj[0])
+                MJ.extend(np.array(m) - m0 for m in monomials_gj[1:])
+            return np.linalg.matrix_rank(np.array(MJ))
+        grab_available = True
+        for l in range(2, len(J) + 1): #automatically satisfies l=1 as mu(gj)>=2 for all j in J
+            for I in it.combinations(J, l):
+                while True:
+                    if grab_available:
+                        grab_available = grab_new_monomial(J)
+                    if rank_of_MJ(I) >= l:
+                        break
+                    if not grab_available:
+                        return False
     return True
 
 #terminal(degree, point, sing, stratum): returns True if the given singularity is terminal, False otherwise
