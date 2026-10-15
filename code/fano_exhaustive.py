@@ -253,11 +253,8 @@ def rank_test(degree, point, stratum_weights, stratum_indices):
         grab_available = True
         for l in range(2, len(J) + 1): #automatically satisfies l=1 as mu(gj)>=2 for all j in J
             for I in it.combinations(J, l):
-                while True:
-                    if grab_available:
-                        grab_available = grab_new_monomial(J)
-                    if rank_of_MJ(I) >= l:
-                        break
+                while rank_of_MJ(I) < l:
+                    grab_available = grab_new_monomial(J)
                     if not grab_available:
                         return False
     return True
